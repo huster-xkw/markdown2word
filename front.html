@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepExtract - 数字化资产结构化专家</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', '"Noto Sans SC"', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#3B82F6',
+                        cta: '#F97316',
+                        background: '#F8FAFC',
+                        surface: '#FFFFFF',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'text-muted': '#94A3B8',
+                        border: '#E2E8F0',
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                        'soft-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.03), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
+                        'glow': '0 0 20px rgba(37, 99, 235, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-feature-settings: "cv11", "ss01";
+            font-variation-settings: "opsz" 32;
+        }
+        
+        /* 全屏滚动容器 */
+        .fullscreen-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        
+        /* 每个全屏板块 */
+        .fullscreen-section {
+            min-height: 100vh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 板块进入动画 */
+        .fullscreen-section .section-content {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .fullscreen-section.active .section-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 导航点样式 */
+        .nav-dots {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(37, 99, 235, 0.2);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot:hover {
+            background: rgba(37, 99, 235, 0.4);
+            transform: scale(1.2);
+        }
+        
+        .nav-dot.active {
+            background: #2563EB;
+            border-color: #2563EB;
+            transform: scale(1.3);
+        }
+        
+        /* 滚动提示 */
+        .scroll-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+        
+        .scroll-hint:hover {
+            opacity: 1;
+        }
+        
+        .scroll-hint.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* 导航栏显隐动画 */
+        .nav-visible {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: translateY(0) !important;
+        }
+        
+        .nav-hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: translateY(-100%) !important;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #60A5FA 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-gradient {
+            background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(37, 99, 235, 0.15), transparent);
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.15);
+        }
+        
+        .feature-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.5);
+        }
+        
+        .btn-cta {
+            background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.5);
+        }
+        
+        .dashed-upload {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='24' ry='24' stroke='%232563EB' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='round'/%3e%3c/svg%3e");
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+        
+        .tech-grid {
+            background-size: 40px 40px;
+            background-image: radial-gradient(circle, #E2E8F0 1px, transparent 1px);
+        }
+        
+        .scroll-indicator {
+            animation: bounce-gentle 2s infinite;
+        }
+        
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(8px); }
+        }
+        
+        .tab-active {
+            background: white;
+            color: #2563EB;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .process-line {
+            background: linear-gradient(90deg, #2563EB 0%, #3B82F6 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .hero-showcase-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .hero-showcase-card {
+            position: absolute;
+            width: 310px;
+            background: rgba(255, 255, 255, 0.74);
+            border: 1px solid rgba(37, 99, 235, 0.12);
+            border-radius: 16px;
+            box-shadow: 0 18px 32px -26px rgba(15, 23, 42, 0.28);
+            backdrop-filter: blur(8px);
+            padding: 12px 14px;
+        }
+
+        .hero-showcase-card .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            margin-bottom: 8px;
+        }
+
+        .hero-showcase-card .mini-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1E293B;
+            margin-bottom: 4px;
+        }
+
+        .hero-showcase-card .mini-desc {
+            font-size: 12px;
+            line-height: 1.45;
+            color: #64748B;
+        }
+
+        .hero-showcase-card code {
+            display: block;
+            margin-top: 0;
+            padding: 6px 8px;
+            font-size: 11px;
+            border-radius: 8px;
+            color: #334155;
+            background: rgba(241, 245, 249, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .ba-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 8px;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .ba-label {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748B;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .mini-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .mini-pill {
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #475569;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(248, 250, 252, 0.95);
+        }
+
+        .hero-card-lt { top: 126px; left: 42px; animation: heroDrift 8s ease-in-out infinite; }
+        .hero-card-rt { top: 116px; right: 56px; animation: heroDrift 8.8s ease-in-out infinite 0.4s; }
+        .hero-card-lb { bottom: 98px; left: 54px; animation: heroDrift 9.6s ease-in-out infinite 0.8s; }
+        .hero-card-rb { bottom: 108px; right: 66px; animation: heroDrift 10.2s ease-in-out infinite 1.2s; }
+
+        @keyframes heroDrift {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-10px) translateX(5px); }
+        }
+    </style>
+</head>
+<body class="bg-background text-text-primary antialiased">
+    <!-- 导航点 -->
+    <div class="nav-dots">
+        <div class="nav-dot active" onclick="goToSection(0)" title="首页"></div>
+        <div class="nav-dot" onclick="goToSection(1)" title="开始萃取"></div>
+        <div class="nav-dot" onclick="goToSection(2)" title="核心功能"></div>
+        <div class="nav-dot" onclick="goToSection(3)" title="使用场景"></div>
+        <div class="nav-dot" onclick="goToSection(4)" title="技术优势"></div>
+    </div>
+    
+    <!-- 滚动提示 -->
+    <div class="scroll-hint" id="scrollHint">
+        <span class="text-xs font-medium text-text-secondary">向下滚动</span>
+        <i data-lucide="chevron-down" class="w-5 h-5 text-text-secondary animate-bounce"></i>
+    </div>
+    
+    <!-- Navigation - 只在首页显示 -->
+    <nav id="mainNav" class="fixed top-4 left-4 right-4 z-50 glass-effect rounded-2xl shadow-soft nav-visible">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="goToSection(0)">
+                    <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-glow">
+                        <i data-lucide="layers" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight">DeepExtract</span>
+                </div>
+                
+                <div class="hidden md:flex items-center gap-8 text-sm font-medium text-text-secondary">
+                    <a href="javascript:void(0)" onclick="goToSection(1)" class="hover:text-primary transition-colors">开始萃取</a>
+                    <a href="javascript:void(0)" onclick="goToSection(2)" class="hover:text-primary transition-colors">核心功能</a>
+                    <a href="javascript:void(0)" onclick="goToSection(3)" class="hover:text-primary transition-colors">使用场景</a>
+                    <a href="javascript:void(0)" onclick="goToSection(4)" class="hover:text-primary transition-colors">技术优势</a>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <button class="hidden sm:block px-4 py-2 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
+                        登录
+                    </button>
+                    <button onclick="goToSection(1)" class="btn-primary px-5 py-2.5 text-white text-sm font-semibold rounded-xl">
+                        免费试用
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 全屏滚动容器 -->
+    <div class="fullscreen-container" id="fullscreenContainer">
+    
+    <!-- Hero Section -->
+    <section id="hero" class="fullscreen-section active hero-gradient">
+        <!-- Background Elements -->
+        <div class="absolute inset-0 tech-grid opacity-50"></div>
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cta/10 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 2s;"></div>
+
+        <div class="hero-showcase-layer hidden 2xl:block">
+            <div class="hero-showcase-card hero-card-lt">
+                <span class="tag bg-primary/10 text-primary">
+                    <i data-lucide="sigma" class="w-3 h-3"></i>
+                    公式转换
+                </span>
+                <div class="mini-title">Markdown 公式直转 Word 原生</div>
+                <div class="ba-grid">
+                    <div>
+                        <span class="ba-label">Before</span>
+                        <code>$$\int_0^1 x^2dx$$</code>
+                    </div>
+                    <i data-lucide="arrow-right" class="w-4 h-4 text-primary"></i>
+                    <div>
+                        <span class="ba-label">After</span>
+                        <code>Word OMML (可编辑)</code>
+                    </div>
+                </div>
+                <div class="mini-desc">导出后可双击编辑，保持数学语义和版式。</div>
+            </div>
+
+            <div class="hero-showcase-card hero-card-rt">
+                <span class="tag bg-amber-500/10 text-amber-600">
+                    <i data-lucide="table" class="w-3 h-3"></i>
+                    表格还原
+                </span>
+                <div class="mini-title">Markdown 表格还原为可编辑表格</div>
+                <div class="ba-grid">
+                    <div>
+                        <span class="ba-label">Before</span>
+                        <code>| 指标 | 数值 |</code>
+                    </div>
+                    <i data-lucide="arrow-right" class="w-4 h-4 text-amber-600"></i>
+                    <div>
+                        <span class="ba-label">After</span>
+                        <code>Word Table (可编辑)</code>
+                    </div>
+                </div>
+                <div class="mini-desc">行列结构完整保留，内容和样式都可继续修改。</div>
+            </div>
+
+            <div class="hero-showcase-card hero-card-lb">
+                <span class="tag bg-emerald-500/10 text-emerald-600">
+                    <i data-lucide="timer" class="w-3 h-3"></i>
+                    效率提升
+                </span>
+                <div class="mini-title">平均 10 秒完成 Markdown 转 Word</div>
+                <div class="ba-grid">
+                    <div>
+                        <span class="ba-label">Before</span>
+                        <code>复制、粘贴、反复排版</code>
+                    </div>
+                    <i data-lucide="arrow-right" class="w-4 h-4 text-emerald-600"></i>
+                    <div>
+                        <span class="ba-label">After</span>
+                        <code>一键导出可交付文档</code>
+                    </div>
+                </div>
+                <div class="mini-desc">上传即处理，完成后直接下载使用。</div>
+            </div>
+
+            <div class="hero-showcase-card hero-card-rb">
+                <span class="tag bg-indigo-500/10 text-indigo-600">
+                    <i data-lucide="type" class="w-3 h-3"></i>
+                    样式可控
+                </span>
+                <div class="mini-title">字号、字体、行距与编号自由设置</div>
+                <div class="mini-desc">转换时就能完成版式设定，减少后续返工。</div>
+                <div class="mini-pills">
+                    <span class="mini-pill">字号</span>
+                    <span class="mini-pill">字体</span>
+                    <span class="mini-pill">行距</span>
+                    <span class="mini-pill">段间距</span>
+                    <span class="mini-pill">公式编号</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-content relative z-10 max-w-7xl mx-auto px-6 text-center w-full">
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-soft mb-8 border border-border">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span class="text-sm font-medium text-text-secondary">免注册 · 零门槛 · 5分钟自动销毁</span>
+            </div>
+            
+            <!-- Main Heading -->
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+                让知识回归
+                <span class="gradient-text">结构</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-text-secondary max-w-3xl mx-auto mb-4 leading-relaxed">
+                数字化资产结构化专家
+            </p>
+            <p class="text-base text-text-muted max-w-2xl mx-auto mb-12 leading-relaxed">
+                打通知识流转的"最后一公里"。将 PDF、图片、Word 深度萃取为结构化数字化资产，<br class="hidden md:block">
+                无需注册，即开即用，让创作跨越格式的边界。
+            </p>
+            
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+                <button onclick="scrollToSection('work')" class="btn-cta px-8 py-4 text-white text-lg font-semibold rounded-2xl flex items-center gap-2">
+                    <i data-lucide="zap" class="w-5 h-5"></i>
+                    立即开始萃取
+                </button>
+                <button onclick="scrollToSection('features')" class="px-8 py-4 text-text-primary font-semibold rounded-2xl border-2 border-border hover:border-primary hover:text-primary transition-all flex items-center gap-2">
+                    <i data-lucide="play-circle" class="w-5 h-5"></i>
+                    了解更多
+                </button>
+            </div>
+            
+            <!-- 个人网站链接 -->
+            <div class="flex items-center justify-center gap-2 text-sm text-text-muted mb-8">
+                <i data-lucide="globe" class="w-4 h-4"></i>
+                <span>Made by</span>
+                <a href="https://xkw.deepextractai.com/" target="_blank" rel="noopener noreferrer" class="text-primary hover:text-cta transition-colors font-medium flex items-center gap-1">
+                    开发者主页
+                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                </a>
+            </div>
+            
+            <!-- Stats -->
+            <div class="flex flex-wrap justify-center gap-8 md:gap-16">
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold gradient-text">5+</div>
+                    <div class="text-sm text-text-muted mt-1">核心转换场景</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold gradient-text">99%+</div>
+                    <div class="text-sm text-text-muted mt-1">公式识别准确率</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold gradient-text">0</div>
+                    <div class="text-sm text-text-muted mt-1">注册门槛</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold gradient-text">5min</div>
+                    <div class="text-sm text-text-muted mt-1">自动销毁保障</div>
+                </div>
+            </div>
+        </div>
+        
+    </section>
+
+    <!-- Work Section - Converter -->
+    <section id="work" class="fullscreen-section bg-white">
+        <div class="section-content max-w-5xl mx-auto px-6 w-full">
+            <div class="text-center mb-12">
+                <span class="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full mb-4">
+                    开始萃取
+                </span>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">全能萃取中心</h2>
+                <p class="text-lg text-text-secondary">
+                    无需注册，拖入文件即可开始
+                </p>
+            </div>
+            
+            <div class="bg-background rounded-[32px] p-8 md:p-12 border border-border shadow-soft-lg">
+                <!-- Upload Area -->
+                <div id="upload-area" 
+                     onclick="document.getElementById('file-input').click()"
+                     ondrop="handleDrop(event)"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     class="w-full h-80 rounded-3xl dashed-upload bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-primary/10 mb-10 relative overflow-hidden">
+                    
+                    <input type="file" id="file-input" class="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.html,.md,.markdown" onchange="handleFileSelect(this)">
+                    
+                    <div id="upload-content" class="text-center z-10">
+                        <div class="w-20 h-20 bg-white text-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-soft">
+                            <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-text-primary mb-2">拖入文件开始萃取</h3>
+                        <p class="text-text-muted">或点击选择文件</p>
+                        <p class="text-sm text-text-muted mt-2">支持 PDF, Word, PPT, 图片, HTML, Markdown (最大 50MB)</p>
+                    </div>
+                    
+                    <div id="file-preview" class="hidden text-center z-10">
+                        <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="file-check" class="w-10 h-10"></i>
+                        </div>
+                        <h3 id="filename" class="text-2xl font-bold text-text-primary mb-2"></h3>
+                        <p id="filesize" class="text-text-muted"></p>
+                    </div>
+                    
+                    <div id="upload-overlay" class="absolute inset-0 bg-primary/10 opacity-0 transition-opacity pointer-events-none"></div>
+                </div>
+                
+                <!-- Options -->
+                <div class="flex flex-col md:flex-row gap-6 items-stretch">
+                    <!-- Target Format -->
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-text-secondary mb-3">导出格式</label>
+                        <div class="flex p-1.5 bg-white rounded-2xl border border-border">
+                            <button id="btn-md" onclick="setTarget('md')" class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all tab-active">
+                                <i data-lucide="file-code" class="w-4 h-4 inline-block mr-2"></i>
+                                Markdown
+                            </button>
+                            <button id="btn-doc" onclick="setTarget('doc')" class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all text-text-secondary hover:text-text-primary">
+                                <i data-lucide="file-text" class="w-4 h-4 inline-block mr-2"></i>
+                                Word 文档
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Start Button -->
+                    <div class="w-full md:w-auto">
+                        <label class="block text-sm font-medium text-text-secondary mb-3 md:invisible">操作</label>
+                        <button id="start-btn" onclick="startConversion()" disabled 
+                                class="w-full btn-primary py-3 px-12 text-white text-lg font-semibold rounded-2xl flex items-center justify-center gap-3 opacity-50 cursor-not-allowed h-[46px]">
+                            <span>开始萃取</span>
+                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="doc-options-panel" class="hidden mt-6 p-5 bg-white rounded-2xl border border-border">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-base font-semibold text-text-primary">Word 排版选项</h4>
+                        <span class="text-xs text-text-muted">仅导出 Word 时生效</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="rounded-xl border border-border p-4">
+                            <h5 class="text-sm font-semibold text-text-primary mb-3">字号</h5>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="text-xs text-text-secondary">正文
+                                    <input id="opt-font-size-body" type="number" min="8" max="32" step="1" value="11" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm">
+                                </label>
+                                <label class="text-xs text-text-secondary">一级标题
+                                    <input id="opt-font-size-h1" type="number" min="8" max="48" step="1" value="16" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm">
+                                </label>
+                                <label class="text-xs text-text-secondary">二级标题
+                                    <input id="opt-font-size-h2" type="number" min="8" max="48" step="1" value="14" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm">
+                                </label>
+                                <label class="text-xs text-text-secondary">三级标题
+                                    <input id="opt-font-size-h3" type="number" min="8" max="48" step="1" value="13" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm">
+                                </label>
+                                <label class="text-xs text-text-secondary col-span-2">四级标题
+                                    <input id="opt-font-size-h4" type="number" min="8" max="48" step="1" value="12" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-border p-4">
+                            <h5 class="text-sm font-semibold text-text-primary mb-3">字体</h5>
+                            <div class="space-y-3">
+                                <label class="text-xs text-text-secondary block">中文
+                                    <select id="opt-font-zh" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm bg-white">
+                                        <option value="微软雅黑" selected>微软雅黑</option>
+                                        <option value="宋体">宋体</option>
+                                        <option value="黑体">黑体</option>
+                                        <option value="仿宋">仿宋</option>
+                                        <option value="楷体">楷体</option>
+                                    </select>
+                                </label>
+                                <label class="text-xs text-text-secondary block">英文
+                                    <select id="opt-font-en" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm bg-white">
+                                        <option value="Calibri" selected>Calibri</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Arial">Arial</option>
+                                        <option value="Cambria">Cambria</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-border p-4">
+                            <h5 class="text-sm font-semibold text-text-primary mb-3">间距</h5>
+                            <div class="space-y-3">
+                                <label class="text-xs text-text-secondary block">行间距
+                                    <input id="opt-line-spacing" type="number" min="1" max="3" step="0.1" value="1.5" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm">
+                                </label>
+                                <label class="text-xs text-text-secondary block">段间距（pt）
+                                    <input id="opt-paragraph-spacing" type="number" min="0" max="48" step="1" value="6" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-border p-4">
+                            <h5 class="text-sm font-semibold text-text-primary mb-3">公式编号</h5>
+                            <label class="text-xs text-text-secondary block">编号模式
+                                <select id="opt-formula-numbering-mode" class="mt-1 w-full px-3 py-2 rounded-lg border border-border text-sm bg-white">
+                                    <option value="none">不编号</option>
+                                    <option value="chapter_index" selected>(章-序号)</option>
+                                    <option value="global">全文连续编号</option>
+                                    <option value="chapter">章节连续编号</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Note -->
+            <div class="mt-8 flex items-center justify-center gap-6 text-text-muted">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    <span class="text-sm">SSL 加密传输</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
+                    <span class="text-sm">5分钟自动销毁</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="eye-off" class="w-4 h-4"></i>
+                    <span class="text-sm">无痕处理</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Features Section -->
+    <section id="features" class="fullscreen-section bg-white">
+        <div class="section-content max-w-7xl mx-auto px-6 w-full">
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full mb-4">
+                    五大核心转换场景
+                </span>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">全能文档萃取中心</h2>
+                <p class="text-lg text-text-secondary max-w-2xl mx-auto">
+                    无论是知识入库还是科研回流，DeepExtract 都能精准还原文档结构
+                </p>
+            </div>
+            
+            <!-- Input Group -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-text-secondary mb-4 flex items-center gap-2">
+                    <i data-lucide="arrow-right-circle" class="w-5 h-5 text-primary"></i>
+                    输入格式
+                </h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- PDF Input -->
+                    <div class="feature-card group p-6 bg-background rounded-2xl border border-border card-hover cursor-pointer" onclick="selectFeature('pdf')">
+                        <div class="flex items-start gap-4">
+                            <div class="feature-icon w-12 h-12 bg-red-500/10 text-red-500 rounded-xl flex items-center justify-center shrink-0">
+                                <i data-lucide="file-text" class="w-6 h-6"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold mb-1">PDF 文档</h3>
+                                <p class="text-sm text-text-secondary">学术论文、扫描件、电子书籍</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Image Input -->
+                    <div class="feature-card group p-6 bg-background rounded-2xl border border-border card-hover cursor-pointer" onclick="selectFeature('img')">
+                        <div class="flex items-start gap-4">
+                            <div class="feature-icon w-12 h-12 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center shrink-0">
+                                <i data-lucide="image" class="w-6 h-6"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold mb-1">图片</h3>
+                                <p class="text-sm text-text-secondary">截图、照片、手写笔记</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Word Input -->
+                    <div class="feature-card group p-6 bg-background rounded-2xl border border-border card-hover cursor-pointer" onclick="selectFeature('doc')">
+                        <div class="flex items-start gap-4">
+                            <div class="feature-icon w-12 h-12 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center shrink-0">
+                                <i data-lucide="file-type" class="w-6 h-6"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold mb-1">Word 文档</h3>
+                                <p class="text-sm text-text-secondary">.doc / .docx 格式文件</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Arrow Divider -->
+            <div class="flex items-center justify-center py-6">
+                <div class="w-px h-12 bg-gradient-to-b from-border via-primary to-border"></div>
+            </div>
+            
+            <!-- Output Group -->
+            <div>
+                <h3 class="text-lg font-semibold text-text-secondary mb-4 flex items-center gap-2">
+                    <i data-lucide="arrow-down-circle" class="w-5 h-5 text-cta"></i>
+                    输出格式
+                </h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Markdown Output -->
+                    <div class="feature-card group p-6 bg-background rounded-2xl border border-border card-hover cursor-pointer" onclick="selectFeature('md')">
+                        <div class="flex items-start gap-4">
+                            <div class="feature-icon w-12 h-12 bg-slate-800/10 text-slate-700 rounded-xl flex items-center justify-center shrink-0">
+                                <i data-lucide="file-code" class="w-6 h-6"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold mb-1">Markdown</h3>
+                                <p class="text-sm text-text-secondary mb-3">结构化纯文本，适合知识库</p>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <span class="px-2 py-0.5 bg-white text-[10px] font-medium text-text-secondary rounded border border-border">Obsidian</span>
+                                    <span class="px-2 py-0.5 bg-white text-[10px] font-medium text-text-secondary rounded border border-border">Notion</span>
+                                    <span class="px-2 py-0.5 bg-white text-[10px] font-medium text-text-secondary rounded border border-border">Logseq</span>
+                                    <span class="px-2 py-0.5 bg-white text-[10px] font-medium text-text-secondary rounded border border-border">LaTeX公式</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Word Output -->
+                    <div class="feature-card group p-6 bg-background rounded-2xl border-2 border-primary/20 card-hover cursor-pointer relative overflow-hidden" onclick="selectFeature('docx')">
+                        <div class="absolute top-3 right-3 px-2 py-0.5 bg-cta/10 text-cta text-[10px] font-bold rounded-full">
+                            推荐
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="feature-icon w-12 h-12 bg-emerald-500/10 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+                                <i data-lucide="file-type-2" class="w-6 h-6"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold mb-1">Word 文档</h3>
+                                <p class="text-sm text-text-secondary mb-3">可编辑文档，保留排版</p>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <span class="px-2 py-0.5 bg-emerald-50 text-[10px] font-medium text-emerald-600 rounded border border-emerald-100">公式编辑</span>
+                                    <span class="px-2 py-0.5 bg-emerald-50 text-[10px] font-medium text-emerald-600 rounded border border-emerald-100">OMML原生</span>
+                                    <span class="px-2 py-0.5 bg-emerald-50 text-[10px] font-medium text-emerald-600 rounded border border-emerald-100">表格还原</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conversion Matrix Note -->
+            <div class="mt-6 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                <p class="text-sm text-text-secondary text-center">
+                    <i data-lucide="info" class="w-4 h-4 inline-block mr-1 text-primary"></i>
+                    支持 PDF ↔ Word、图片 ↔ Markdown、Word → Markdown 等多种转换组合
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <section id="scenarios" class="fullscreen-section bg-background">
+        <div class="section-content max-w-7xl mx-auto px-6 w-full">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <span class="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full mb-4">
+                        核心叙事
+                    </span>
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                        赋能新时代的<br>"超级个体"
+                    </h2>
+                    <p class="text-lg text-text-secondary mb-8 leading-relaxed">
+                        在信息爆炸的时代，获取信息不再困难，困难的是如何"结构化"地存储与再利用。
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex gap-4 p-6 bg-white rounded-2xl border border-border shadow-soft">
+                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center shrink-0">
+                                <i data-lucide="brain" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-1">知识管理难</h4>
+                                <p class="text-text-secondary text-sm leading-relaxed">
+                                    网页剪藏、PDF 文献往往是死数据，难以搜索和二次编辑。
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-4 p-6 bg-white rounded-2xl border border-border shadow-soft">
+                            <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center shrink-0">
+                                <i data-lucide="layout-template" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-1">排版回流痛</h4>
+                                <p class="text-text-secondary text-sm leading-relaxed">
+                                    LaTeX/Markdown 写作虽然高效，但将 PDF 完美还原回可编辑的 Word 是一场灾难。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 p-6 bg-primary/5 rounded-2xl border border-primary/10">
+                        <p class="text-primary font-medium">
+                            <i data-lucide="sparkles" class="w-5 h-5 inline-block mr-2"></i>
+                            DeepExtract 的出现，正是为了打通知识流转的"最后一公里"。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute -inset-4 bg-gradient-to-r from-primary/20 to-cta/20 rounded-[40px] blur-3xl"></div>
+                    <div class="relative bg-white rounded-[32px] p-8 shadow-soft-lg border border-border">
+                        <div class="flex items-center gap-3 mb-6 pb-6 border-b border-border">
+                            <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                <i data-lucide="users" class="w-5 h-5 text-primary"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">适合谁使用？</h4>
+                                <p class="text-sm text-text-muted">DeepExtract 的用户画像</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4 p-4 bg-background rounded-xl">
+                                <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold">科研工作者</h5>
+                                    <p class="text-sm text-text-muted">论文撰写、文献整理、公式编辑</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-4 p-4 bg-background rounded-xl">
+                                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold">超级个体</h5>
+                                    <p class="text-sm text-text-muted">内容创作者、独立开发者、自由职业者</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-4 p-4 bg-background rounded-xl">
+                                <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="book-marked" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold">知识管理者</h5>
+                                    <p class="text-sm text-text-muted">第二大脑构建者、知识库维护者</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-4 p-4 bg-background rounded-xl">
+                                <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="building-2" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold">企业用户</h5>
+                                    <p class="text-sm text-text-muted">文档数字化、档案管理、资料整理</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Advantages Section -->
+    <section id="tech" class="fullscreen-section bg-white">
+        <div class="section-content max-w-7xl mx-auto px-6 w-full">
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-1.5 bg-cta/10 text-cta text-sm font-semibold rounded-full mb-4">
+                    三大"黑科技"技术优势
+                </span>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">不只是提取，更是理解</h2>
+                <p class="text-lg text-text-secondary max-w-2xl mx-auto">
+                    DeepExtract 通过深度学习与专有算法，实现业界领先的文档解析能力
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Tech 1 -->
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent rounded-3xl"></div>
+                    <div class="relative p-8">
+                        <div class="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6 text-2xl font-bold">
+                            01
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">深度结构化解析引擎</h3>
+                        <p class="text-text-secondary leading-relaxed mb-6">
+                            不只是提取文字，而是通过深度学习模型理解文档的视觉逻辑。分栏排版、复杂表格嵌套、特殊标题层级，统统精准捕捉。
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="tech-tag px-3 py-1 bg-primary/5 text-primary text-sm rounded-full">视觉逻辑识别</span>
+                            <span class="tech-tag px-3 py-1 bg-primary/5 text-primary text-sm rounded-full">深度学习</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tech 2 -->
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-gradient-to-b from-cta/5 to-transparent rounded-3xl"></div>
+                    <div class="relative p-8">
+                        <div class="w-16 h-16 bg-cta/10 text-cta rounded-2xl flex items-center justify-center mb-6 text-2xl font-bold">
+                            02
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">完美的公式处理能力</h3>
+                        <p class="text-text-secondary leading-relaxed mb-6">
+                            将 Markdown 中的 LaTeX 公式无缝映射为 Microsoft Office Math 格式。导出的 Word 文档美观且完全可编辑。
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="tech-tag px-3 py-1 bg-cta/5 text-cta text-sm rounded-full">LaTeX → OMML</span>
+                            <span class="tech-tag px-3 py-1 bg-cta/5 text-cta text-sm rounded-full">原生编辑</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tech 3 -->
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent rounded-3xl"></div>
+                    <div class="relative p-8">
+                        <div class="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 text-2xl font-bold">
+                            03
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">隐私保护与零阻碍体验</h3>
+                        <p class="text-text-secondary leading-relaxed mb-6">
+                            免注册使用，数据随用随走。所有文件通过加密通道传输，转换完成后 5 分钟内彻底销毁，零痕迹。
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="tech-tag px-3 py-1 bg-emerald-500/5 text-emerald-500 text-sm rounded-full">加密传输</span>
+                            <span class="tech-tag px-3 py-1 bg-emerald-500/5 text-emerald-500 text-sm rounded-full">自动销毁</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formula Showcase -->
+            <div class="mt-16 p-8 bg-slate-50 rounded-3xl border border-border">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div class="flex-1">
+                        <h4 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="sigma" class="w-6 h-6 text-primary"></i>
+                            公式还原效果展示
+                        </h4>
+                        <p class="text-text-secondary mb-6">
+                            业界唯一支持将复杂数学公式转换为 Word 原生编辑格式的工具，无需插件，无需排版调整。
+                        </p>
+                        <div class="flex gap-4">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-primary">LaTeX</div>
+                                <div class="text-sm text-text-muted mt-1">输入格式</div>
+                            </div>
+                            <div class="flex items-center">
+                                <i data-lucide="arrow-right" class="w-6 h-6 text-primary"></i>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-cta">Word</div>
+                                <div class="text-sm text-text-muted mt-1">OMML 原生</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-border shadow-soft">
+                        <div class="font-mono text-sm text-text-secondary mb-2">LaTeX 源码：</div>
+                        <code class="block bg-slate-100 p-3 rounded-lg text-sm text-text-primary mb-4">
+                            \\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
+                        </code>
+                        <div class="text-2xl text-center py-4 border-t border-border">
+                            ∫<sub>-∞</sub><sup>∞</sup> e<sup>-x²</sup> dx = √π
+                        </div>
+                        <div class="text-xs text-center text-text-muted mt-2">
+                            双击可在 Word 公式编辑器中直接修改
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] flex items-center justify-center">
+        <div class="bg-white rounded-3xl p-12 max-w-md w-full mx-4 text-center">
+            <div class="relative w-24 h-24 mx-auto mb-8">
+                <div class="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i data-lucide="sparkles" class="w-8 h-8 text-primary"></i>
+                </div>
+            </div>
+            <h3 class="text-2xl font-bold text-text-primary mb-2">萃取中...</h3>
+            <p id="loading-text" class="text-text-secondary">正在分析文档结构</p>
+            
+            <!-- Progress Bar -->
+            <div class="mt-6 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-primary rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] flex items-center justify-center">
+        <div class="bg-white rounded-3xl p-10 max-w-md w-full mx-4 text-center max-h-[90vh] overflow-y-auto">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="check" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-text-primary mb-2">萃取成功！</h3>
+            <p class="text-text-secondary text-sm mb-6">
+                您的结构化文档已就绪，所有公式与层级均已按照最佳实践还原。
+            </p>
+            
+            <div class="space-y-3 mb-6">
+                <button onclick="downloadFile()" class="w-full btn-primary py-3.5 text-white font-semibold rounded-2xl flex items-center justify-center gap-2">
+                    <i data-lucide="download" class="w-5 h-5"></i>
+                    立即下载
+                </button>
+                <button onclick="resetConverter()" class="w-full py-3.5 text-text-secondary font-medium rounded-2xl hover:bg-slate-50 transition-colors text-sm">
+                    转换另一个文件
+                </button>
+            </div>
+            
+            <!-- 公众号引导 -->
+            <div class="border-t border-border pt-6 mt-6">
+                <div class="bg-gradient-to-br from-primary/5 to-cta/5 rounded-2xl p-5">
+                    <p class="text-sm font-semibold text-text-primary mb-1">
+                        内容对您有所帮助？
+                    </p>
+                    <p class="text-xs text-text-secondary mb-4 leading-relaxed">
+                        欢迎关注我的公众号，专注分享 AI 实战与商业思考，体验更多智能工具
+                    </p>
+                    <div class="flex flex-col items-center">
+                        <!-- 二维码图片 - 支持以下方式：
+                             1. 本地文件：qrcode.jpg（放在同目录）
+                             2. 完整URL：https://example.com/qrcode.jpg
+                             3. Base64编码图片
+                        -->
+                        <div class="w-32 h-32 bg-white rounded-xl shadow-sm p-2 mb-3">
+                            <img id="qrcode-img" src="qrcode.jpg" alt="公众号二维码" class="w-full h-full object-contain rounded-lg" onerror="handleQRCodeError(this)">
+                            <div id="qrcode-placeholder" style="display: none;" class="w-full h-full bg-slate-100 rounded-lg flex flex-col items-center justify-center text-xs text-text-muted">
+                                <i data-lucide="image-off" class="w-6 h-6 mb-1"></i>
+                                <span>二维码</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-text-muted mb-3">
+                            <i data-lucide="scan-line" class="w-3 h-3 inline-block mr-1"></i>
+                            扫码关注，获取更多 AI 干货
+                        </p>
+                        
+                        <!-- 个人网站链接 -->
+                        <a href="https://xkw.deepextractai.com/" target="_blank" rel="noopener noreferrer" 
+                           class="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-xs font-medium text-primary hover:bg-primary hover:text-white transition-all shadow-sm border border-primary/20">
+                            <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+                            访问我的个人主页
+                            <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-24 right-6 z-[200] pointer-events-none"></div>
+    
+    </div><!-- 结束 fullscreen-container -->
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // State
+        let currentTarget = 'md';
+        let selectedFile = null;
+        let currentSection = 0;
+        const sections = document.querySelectorAll('.fullscreen-section');
+        const container = document.getElementById('fullscreenContainer');
+        const dots = document.querySelectorAll('.nav-dot');
+        const scrollHint = document.getElementById('scrollHint');
+        const mainNav = document.getElementById('mainNav');
+        let isScrolling = false;
+        
+        // 跳转到指定板块
+        function goToSection(index) {
+            if (index < 0 || index >= sections.length) return;
+            
+            currentSection = index;
+            sections[index].scrollIntoView({ behavior: 'smooth' });
+            updateActiveState();
+            
+            // 隐藏/显示滚动提示
+            if (index === sections.length - 1) {
+                scrollHint.classList.add('hidden');
+            } else {
+                scrollHint.classList.remove('hidden');
+            }
+        }
+        
+        // 更新活跃状态
+        function updateActiveState() {
+            sections.forEach((section, index) => {
+                if (index === currentSection) {
+                    section.classList.add('active');
+                    dots[index].classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                    dots[index].classList.remove('active');
+                }
+            });
+            updateNavVisibility();
+        }
+        
+        // 导航栏显隐控制
+        function updateNavVisibility() {
+            if (currentSection === 0) {
+                mainNav.classList.remove('nav-hidden');
+                mainNav.classList.add('nav-visible');
+            } else {
+                mainNav.classList.remove('nav-visible');
+                mainNav.classList.add('nav-hidden');
+            }
+        }
+        
+        // 初始化
+        updateActiveState();
+        
+        // 使用 IntersectionObserver 监听板块可见性
+        const observerOptions = {
+            root: container,
+            threshold: 0.5
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const index = Array.from(sections).indexOf(entry.target);
+                    if (index !== currentSection) {
+                        currentSection = index;
+                        updateActiveState();
+                        
+                        // 更新滚动提示
+                        if (index === sections.length - 1) {
+                            scrollHint.classList.add('hidden');
+                        } else {
+                            scrollHint.classList.remove('hidden');
+                        }
+                    }
+                }
+            });
+        }, observerOptions);
+        
+        sections.forEach(section => observer.observe(section));
+        
+        // 键盘导航
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+                e.preventDefault();
+                goToSection(currentSection + 1);
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                e.preventDefault();
+                goToSection(currentSection - 1);
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                goToSection(0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                goToSection(sections.length - 1);
+            }
+        });
+        
+        // 滚轮控制（防止连续滚动）
+        let wheelTimeout;
+        container.addEventListener('wheel', (e) => {
+            if (isScrolling) {
+                e.preventDefault();
+                return;
+            }
+            
+            clearTimeout(wheelTimeout);
+            wheelTimeout = setTimeout(() => {
+                isScrolling = false;
+            }, 800);
+            
+            isScrolling = true;
+        }, { passive: false });
+        
+        // Scroll to section (兼容旧代码)
+        function scrollToSection(id) {
+            const section = document.getElementById(id);
+            if (section) {
+                const index = Array.from(sections).indexOf(section);
+                goToSection(index);
+            }
+        }
+        
+        // Select feature
+        function selectFeature(feature) {
+            scrollToSection('work'); // 跳转到"开始萃取"板块
+            if (feature.includes('doc') || feature === 'docx') {
+                setTarget('doc');
+            } else {
+                setTarget('md');
+            }
+            showToast('已选择转换类型', '请上传文件开始萃取');
+        }
+        
+        // 二维码图片错误处理
+        function handleQRCodeError(img) {
+            console.log('二维码图片加载失败，尝试的路径:', img.src);
+            img.style.display = 'none';
+            document.getElementById('qrcode-placeholder').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function toggleDocOptionsVisibility() {
+            const panel = document.getElementById('doc-options-panel');
+            if (!panel) return;
+            if (currentTarget === 'doc') {
+                panel.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
+
+        function getDocxOptions() {
+            return {
+                font_size_body: document.getElementById('opt-font-size-body').value,
+                font_size_h1: document.getElementById('opt-font-size-h1').value,
+                font_size_h2: document.getElementById('opt-font-size-h2').value,
+                font_size_h3: document.getElementById('opt-font-size-h3').value,
+                font_size_h4: document.getElementById('opt-font-size-h4').value,
+                font_zh: document.getElementById('opt-font-zh').value,
+                font_en: document.getElementById('opt-font-en').value,
+                line_spacing: document.getElementById('opt-line-spacing').value,
+                paragraph_spacing: document.getElementById('opt-paragraph-spacing').value,
+                formula_numbering_mode: document.getElementById('opt-formula-numbering-mode').value,
+            };
+        }
+        
+        // Set target format
+        function setTarget(target) {
+            currentTarget = target;
+            const btnMd = document.getElementById('btn-md');
+            const btnDoc = document.getElementById('btn-doc');
+            
+            if (target === 'md') {
+                btnMd.classList.add('tab-active');
+                btnMd.classList.remove('text-text-secondary');
+                btnDoc.classList.remove('tab-active');
+                btnDoc.classList.add('text-text-secondary');
+            } else {
+                btnDoc.classList.add('tab-active');
+                btnDoc.classList.remove('text-text-secondary');
+                btnMd.classList.remove('tab-active');
+                btnMd.classList.add('text-text-secondary');
+            }
+            toggleDocOptionsVisibility();
+        }
+        
+        // Handle file select
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                showFilePreview(selectedFile);
+            }
+        }
+        
+        // Show file preview
+        function showFilePreview(file) {
+            document.getElementById('upload-content').classList.add('hidden');
+            document.getElementById('file-preview').classList.remove('hidden');
+            document.getElementById('filename').textContent = file.name;
+            document.getElementById('filesize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+            
+            const startBtn = document.getElementById('start-btn');
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        
+        // Drag and drop handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('upload-overlay').classList.remove('opacity-0');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('upload-overlay').classList.add('opacity-0');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('upload-overlay').classList.add('opacity-0');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                showFilePreview(selectedFile);
+            }
+        }
+        
+        // Current task ID for polling
+        let currentTaskId = null;
+        let pollTimer = null;
+        const API_BASE_PREFIX = window.location.pathname.startsWith('/docx') ? '/docx' : '';
+
+        // Start conversion — real API call
+        function startConversion() {
+            if (!selectedFile) return;
+
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            const progressBar = document.getElementById('progress-bar');
+            const loadingText = document.getElementById('loading-text');
+            progressBar.style.width = '0%';
+            loadingText.textContent = '正在上传文件';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('target', currentTarget);
+            if (currentTarget === 'doc') {
+                formData.append('docx_options', JSON.stringify(getDocxOptions()));
+            }
+
+            fetch(`${API_BASE_PREFIX}/api/upload`, { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    currentTaskId = data.task_id;
+                    progressBar.style.width = '5%';
+                    loadingText.textContent = '已提交，正在处理';
+                    startPolling();
+                })
+                .catch(err => {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    showToast('上传失败', err.message);
+                });
+        }
+
+        function startPolling() {
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(() => {
+                fetch(`${API_BASE_PREFIX}/api/status/${currentTaskId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const progressBar = document.getElementById('progress-bar');
+                        const loadingText = document.getElementById('loading-text');
+
+                        if (data.state === 'done') {
+                            clearInterval(pollTimer);
+                            pollTimer = null;
+                            progressBar.style.width = '100%';
+                            loadingText.textContent = '萃取完成';
+                            setTimeout(() => {
+                                document.getElementById('loading-overlay').classList.add('hidden');
+                                document.getElementById('success-modal').classList.remove('hidden');
+                            }, 400);
+                        } else if (data.state === 'failed') {
+                            clearInterval(pollTimer);
+                            pollTimer = null;
+                            document.getElementById('loading-overlay').classList.add('hidden');
+                            showToast('萃取失败', data.error || '未知错误');
+                        } else {
+                            progressBar.style.width = Math.max(data.progress || 5, 5) + '%';
+                            loadingText.textContent = data.status_text || '处理中';
+                        }
+                    })
+                    .catch(() => {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                        document.getElementById('loading-overlay').classList.add('hidden');
+                        showToast('连接失败', '无法连接到服务器');
+                    });
+            }, 2000);
+        }
+
+        // Download file — real download
+        function downloadFile() {
+            if (!currentTaskId) return;
+            const a = document.createElement('a');
+            a.href = `${API_BASE_PREFIX}/api/download/${currentTaskId}`;
+            a.click();
+            showToast('下载已开始', '文件即将保存到本地');
+            document.getElementById('success-modal').classList.add('hidden');
+            resetConverter();
+        }
+        
+        // Reset converter
+        function resetConverter() {
+            selectedFile = null;
+            currentTaskId = null;
+            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            document.getElementById('file-input').value = '';
+            document.getElementById('upload-content').classList.remove('hidden');
+            document.getElementById('file-preview').classList.add('hidden');
+
+            const startBtn = document.getElementById('start-btn');
+            startBtn.disabled = true;
+            startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+        
+        // Show toast
+        function showToast(title, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-white shadow-2xl rounded-2xl p-5 border border-border flex items-center gap-4 mb-4 min-w-[320px] animate-[slideIn_0.3s_ease-out]';
+            toast.innerHTML = `
+                <div class="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
+                    <i data-lucide="info" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-text-primary">${title}</h4>
+                    <p class="text-sm text-text-muted">${message}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+        
+        // Add slideIn animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Close modal on backdrop click
+        document.getElementById('loading-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                // Don't allow closing during processing
+            }
+        });
+        
+        document.getElementById('success-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                document.getElementById('success-modal').classList.add('hidden');
+            }
+        });
+
+        toggleDocOptionsVisibility();
+    </script>
+</body>
+</html>
