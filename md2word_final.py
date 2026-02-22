@@ -783,6 +783,90 @@ def _append_pandoc_inline_to_paragraph(paragraph, text):
     return False
 
 
+def _split_inline_math_segments(text):
+    """
+    将文本拆分为普通文本与 `$...$` 行内公式片段。
+    仅处理未转义的单美元符号；若闭合符缺失，则剩余内容按普通文本处理。
+    """
+    segments = []
+    cursor = 0
+    text_len = len(text)
+
+    while cursor < text_len:
+        start = _find_unescaped(text, "$", cursor)
+        if start == -1:
+            if cursor < text_len:
+                segments.append(("text", text[cursor:]))
+            break
+
+        # 跳过 $$ 块级公式标记，交给原有流程处理
+        if start + 1 < text_len and text[start + 1] == "$":
+            if start > cursor:
+                segments.append(("text", text[cursor:start]))
+            segments.append(("text", "$$"))
+            cursor = start + 2
+            continue
+
+        if start > cursor:
+            segments.append(("text", text[cursor:start]))
+
+        end = _find_unescaped(text, "$", start + 1)
+        if end == -1:
+            segments.append(("text", text[start:]))
+            break
+
+        formula = text[start + 1:end]
+        segments.append(("math", formula))
+        cursor = end + 1
+
+    return segments
+
+
+def _append_single_inline_math_with_pandoc(paragraph, formula):
+    """
+    仅转换单个行内公式，避免整段 Pandoc 失败导致整行退化。
+    """
+    payload = convert_text_with_pandoc(f"${formula}$")
+    elements = payload["elements"]
+    hyperlink_map = payload["hyperlinks"]
+
+    for element in elements:
+        if not element.tag.endswith("}p"):
+            continue
+        _copy_pandoc_paragraph_children(
+            paragraph,
+            element,
+            hyperlink_map=hyperlink_map,
+        )
+        return True
+
+    return False
+
+
+def _append_inline_with_math_fallback(paragraph, text):
+    """
+    Pandoc 整段失败时的兜底：
+    普通文本走本地 markdown 解析，公式按 `$...$` 逐个尝试 Pandoc。
+    """
+    segments = _split_inline_math_segments(text)
+    if not segments:
+        return False
+
+    saw_math = False
+    for seg_type, seg_content in segments:
+        if seg_type == "text":
+            if seg_content:
+                add_markdown_inline_runs(paragraph, seg_content)
+            continue
+
+        saw_math = True
+        if not _append_single_inline_math_with_pandoc(paragraph, seg_content):
+            # 单个公式仍失败时，最小化降级范围，仅保留该公式原文
+            add_markdown_inline_runs(paragraph, f"${seg_content}$")
+
+    return saw_math
+
+
 def add_inline_content(paragraph, text):
     """
     追加段落内容：
@@ -792,6 +876,8 @@ def add_inline_content(paragraph, text):
     normalized_text = _simplify_link_label_line(text)
 
     if "$" in normalized_text and _append_pandoc_inline_to_paragraph(paragraph, normalized_text):
+        return
+    if "$" in normalized_text and _append_inline_with_math_fallback(paragraph, normalized_text):
         return
 
     add_markdown_inline_runs(paragraph, normalized_text)
