@@ -7,6 +7,11 @@ DeepExtract 是一个文档结构化转换工具：支持 PDF / 图片 / Word / 
 ## 两种使用方式
 
 ### A) 普通用户（Web 界面启动项目）
+```bash
+pip install -r backend/requirements.txt
+python start.py
+```
+打开：http://localhost:5000
 
 这是默认方式，直接本地启动服务后在浏览器使用。
 
