@@ -162,7 +162,7 @@ def process_task(task_id, input_path, target_format, original_name, docx_options
                     doc_style_options=docx_options,
                 )
                 task["result_path"] = output_path
-        task["result_name"] = f"{stem}.docx"
+                task["result_name"] = f"{stem}.docx"
 
         task["state"] = "done"
         task["progress"] = 100
