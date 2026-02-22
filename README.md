@@ -1,12 +1,15 @@
-# DeepExtract
+# DocConvert
 
 中文 | [English](#english)
 
-DeepExtract 是一个文档结构化转换工具：支持 PDF / 图片 / Word / PPT / HTML / Markdown 输入，输出 Markdown 或 Word（`.docx`）。
+DocConvert 是一个文档结构化转换工具：支持 PDF / 图片 / Word / PPT / HTML / Markdown 输入，输出 Markdown 或 Word（`.docx`）。
 
-## 两种使用方式
+## 三种使用方式
 
-### A) 普通用户（Web 界面启动项目）
+### A）在线使用
+https://xkw.deepextractai.com/docx/
+
+### B) 普通用户（Web 界面启动项目）
 ```bash
 pip install -r backend/requirements.txt
 python start.py
@@ -15,7 +18,7 @@ python start.py
 
 这是默认方式，直接本地启动服务后在浏览器使用。
 
-### B) AI 工作流用户（安装 Skill）
+### C) AI 工作流用户（安装 Skill）
 
 支持两种安装方式：
 
@@ -141,7 +144,7 @@ MIT，见 `LICENSE`。
 
 ## English
 
-DeepExtract is a document structuring and conversion tool.
+DocConvert is a document structuring and conversion tool.
 It accepts PDF / images / Word / PPT / HTML / Markdown and exports Markdown or Word (`.docx`).
 
 ### Two usage modes
