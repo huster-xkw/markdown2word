@@ -1,11 +1,11 @@
 ---
 name: deepextract-doc-converter
-description: Convert documents with local DeepExtract when users ask things like "帮我把这个文档转为xx格式", "转成 Word", "转成 Markdown", or "convert this file to docx/markdown". Use for PDF, images, Word, PPT, HTML, and Markdown inputs, with outputs in Markdown or DOCX.
+description: Convert documents with local Doc Convert (DeepExtract engine) when users ask things like "帮我把这个文档转为xx格式", "转成 Word", "转成 Markdown", or "convert this file to docx/markdown". Use for PDF, images, Word, PPT, HTML, and Markdown inputs, with outputs in Markdown or DOCX.
 ---
 
-# DeepExtract Document Converter
+# Doc Convert Document Converter
 
-Use this skill to execute real local file conversion through the DeepExtract codebase.
+Use this skill to execute real local file conversion through the Doc Convert / DeepExtract codebase.
 
 ## Workflow
 
@@ -54,4 +54,5 @@ python "$HOME/.config/opencode/skills/deepextract-doc-converter/scripts/convert_
 - For MinerU-based conversions, API key is required:
   - `MINERU_API_KEY` environment variable, or
   - `apikey.md` with `MINERU_API_KEY=...`
+- For robust formula rendering in DOCX, ensure `pandoc` is installed and available in PATH.
 - If both input path and target are clear, run directly without asking extra questions.
